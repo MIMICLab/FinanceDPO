@@ -1,9 +1,9 @@
-# Optuna‑based hyperparameter optimization config
-# Run with:  python src/train.py -m +hpo
+# src/dpo_forecasting/configs/hpo/default.yaml
+# @package _group_
 
 defaults:
-  - override hydra/sweeper: optuna
-  - dpo  # base config
+  - /dpo                          # 1) base config (root‑relative)
+  - _self_                        # 3) _self_ is ALWAYS last
 
 hydra:
   sweeper:
@@ -34,4 +34,4 @@ hydra:
       trainer.max_epochs: "choice(10, 15, 20)"
       
 # Run sweep:
-#   python -m dpo_forecasting.hpo_pipeline -m +hpo
+#   python -m src.hpo_pipeline -m +hpo=default
