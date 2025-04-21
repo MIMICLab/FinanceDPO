@@ -4,7 +4,7 @@ dataset:
   cache_file: data/pairs_cache.pt
   pairs_file: data/pairs.parquet
   prices_dir: data/raw
-  batch_size: 256
+  batch_size: auto
   num_workers: 4
   val_fraction: 0.1
   lookback: 31        # days back for features
@@ -23,12 +23,11 @@ train:
   kl_coeff: 0.02
 
 trainer:
-  auto_scale_batch_size: power   # or binsearch
   max_epochs: 30
   accelerator: auto
   devices: 1
-  log_every_n_steps: 50
-  precision: 32
+  log_every_n_steps: 10
+  precision: 16-mixed
 
 logger:
   use_tb: true              # set false to disable TensorBoard

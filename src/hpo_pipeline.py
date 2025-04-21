@@ -61,7 +61,6 @@ def main(cfg: DictConfig):
         f"dataset.cache_file={cache_file}",
         # propagate any swept dataset + trainer keys
         f"dataset.batch_size={cfg.dataset.batch_size}",
-        f"trainer.auto_scale_batch_size={cfg.trainer.auto_scale_batch_size}",
         f"trainer.max_epochs={cfg.trainer.max_epochs}",
         # optimiser
         f"train.lr={cfg.train.lr}",

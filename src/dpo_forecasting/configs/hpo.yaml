@@ -32,7 +32,6 @@ hydra:
       train.lr:           "loguniform(1e-5, 1e-3)"
       train.kl_coeff:     "choice(0.0, 0.05)"         # KL off vs small regularisation
       trainer.max_epochs: "choice(10, 15, 20)"
-      trainer.auto_scale_batch_size: "binsearch"
       
 # Run sweep:
 #   python -m dpo_forecasting.hpo_pipeline -m +hpo

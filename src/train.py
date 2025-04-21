@@ -7,6 +7,7 @@ TensorBoard logger via `logger.use_tb`.
 from __future__ import annotations
 
 import pytorch_lightning as pl
+from pytorch_lightning.tuner import Tuner
 import hydra
 from omegaconf import DictConfig
 from pytorch_lightning.loggers import TensorBoardLogger
@@ -15,10 +16,10 @@ from pathlib import Path
 
 from dpo_forecasting.models.dpo_model import DPOModel
 from dpo_forecasting.data.dataset import PreferenceDataModule
+from dpo_forecasting.utils.device import get_device
+
 import pandas as pd
 import numpy as np
-
-
 
 def build_logger(cfg: DictConfig):
     if not cfg.logger.use_tb:
@@ -57,18 +58,20 @@ def main(cfg: DictConfig) -> None:
         cache_path = None
         pairs_path = cfg.dataset.pairs_file
     # ------------------------------------------------------------
-
-    # DataModule ---------------------------------------------------------
+    # -----------------------------------------------------------------
+    # Build an initial DataModule with a small safe batch (32) so
+    # Lightning tuner can probe GPU memory.
+    tmp_bs = 32 if cfg.dataset.batch_size == "auto" else cfg.dataset.batch_size
     dm = PreferenceDataModule(
         pairs_file=pairs_path,
         cache_file=cache_path,
         prices_dir=cfg.dataset.prices_dir,
         lookback=inferred_lookback,
-        batch_size=cfg.dataset.batch_size,
+        batch_size=tmp_bs,
         num_workers=cfg.dataset.num_workers,
         val_fraction=cfg.dataset.val_fraction,
     )
-    dm.setup()  # <--- ensure num_features populated
+    dm.setup()
 
     # Model --------------------------------------------------------------
     model = DPOModel(cfg, lookback=inferred_lookback)
@@ -78,7 +81,36 @@ def main(cfg: DictConfig) -> None:
     tb_logger = build_logger(cfg)
 
     # Trainer ------------------------------------------------------------
-    trainer = pl.Trainer(logger=tb_logger, **cfg.trainer)
+    trainer = pl.Trainer(
+        logger=tb_logger,
+        **cfg.trainer,
+    )
+
+    if cfg.dataset.batch_size == "auto":
+        print("[INFO] Auto‑scaling batch size …")              
+        tuner = Tuner(trainer)
+        new_bs = tuner.scale_batch_size(
+            model,
+            datamodule=dm,
+            mode="binsearch",          # power → binsearch
+            max_trials=7,              # 2^8 = 256×; 32 → 8192 사이
+            init_val=64,               # 시작 배치
+        )
+        cfg.dataset.batch_size = int(new_bs)
+        print(f"[INFO] batch_size tuned → {new_bs}")
+
+        # rebuild DataModule with the tuned batch size
+        dm = PreferenceDataModule(
+            pairs_file=pairs_path,
+            cache_file=cache_path,
+            prices_dir=cfg.dataset.prices_dir,
+            lookback=inferred_lookback,
+            batch_size=new_bs,
+            num_workers=cfg.dataset.num_workers,
+            val_fraction=cfg.dataset.val_fraction,
+        )
+        dm.setup()
+
     trainer.fit(model, datamodule=dm)
 
 
