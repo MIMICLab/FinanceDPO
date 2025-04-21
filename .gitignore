@@ -6,3 +6,5 @@ data/
 experiments/
 runs/
 .DS_Store
+outputs/
+tb_logs/
