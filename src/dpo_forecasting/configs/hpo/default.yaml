@@ -1,18 +1,17 @@
-# src/dpo_forecasting/configs/hpo/default.yaml
-# @package _group_
-
+# @package _global_
 defaults:
-  - /dpo                          # 1) base config (root‑relative)
-  - _self_                        # 3) _self_ is ALWAYS last
+  - /dpo
+  - _self_
 
+# Optuna 설정 오버라이드
 hydra:
-  sweeper:
+  sweeper: 
     _target_: hydra_plugins.hydra_optuna_sweeper.optuna_sweeper.OptunaSweeper
     sampler:
       _target_: optuna.samplers.TPESampler
-    direction: maximize  # the pipeline logs val_sharpe; maximise it
+    direction: maximize
     study_name: dpo_hpo
-    storage: null  # in‑memory; set to sqlite:///study.db for persistence
+    storage: sqlite:///study.db
     n_trials: 30
     n_jobs: 1
     params:

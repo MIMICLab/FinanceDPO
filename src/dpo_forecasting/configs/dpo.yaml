@@ -1,5 +1,8 @@
 # Default configuration for DPO‑Finance training
-
+defaults:
+  - hpo: default
+  - _self_
+  
 dataset:
   cache_file: data/pairs_cache.pt
   pairs_file: data/pairs.parquet
