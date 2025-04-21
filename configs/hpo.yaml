@@ -1,0 +1,22 @@
+# Optuna‑based hyperparameter optimization config
+# Run with:  python src/train.py -m +hpo
+
+defaults:
+  - override hydra/sweeper: optuna
+  - dpo  # base config
+
+hydra:
+  sweeper:
+    _target_: hydra_plugins.hydra_optuna_sweeper.optuna_sweeper.OptunaSweeper
+    sampler:
+      _target_: optuna.samplers.TPESampler
+    direction: maximize  # we’ll maximize val_loss *(-1) in objective; override if needed
+    study_name: dpo_hpo
+    storage: null  # in‑memory; set to sqlite:///study.db for persistence
+    n_trials: 30
+    n_jobs: 1
+    params:
+      model.hidden_sizes: "choice([[128,128],[256,256],[256,128,64]])"
+      train.lr: "loguniform(1e-5,1e-3)"
+      train.kl_coeff: "uniform(0.0,0.1)"
+      trainer.max_epochs: "choice(10,15,20)"

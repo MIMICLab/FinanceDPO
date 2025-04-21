@@ -1,0 +1,49 @@
+# -------------------------------------------------------------
+# dvc.yaml — Data version‑control pipeline for DPO‑Finance
+# -------------------------------------------------------------
+
+vars:
+  - params.yaml  # optional user params (e.g., symbols, dates)
+
+stages:
+  download:
+    cmd: >-
+      python src/dpo_forecasting/data/download.py \
+        --symbols-file ${symbols_file} \
+        --start ${start_date} \
+        --end ${end_date} \
+        --out-dir data/raw
+    outs:
+      - data/raw  # directory of CSV files
+    params:
+      - symbols_file
+      - start_date
+      - end_date
+
+  make_pairs:
+    cmd: >-
+      python src/dpo_forecasting/data/make_pairs.py \
+        --prices-dir data/raw \
+        --lookahead ${lookahead} \
+        --out-file data/pairs.parquet
+    deps:
+      - data/raw
+    outs:
+      - data/pairs.parquet
+    params:
+      - lookahead
+
+  train:
+    cmd: >-
+      python src/train.py \
+        dataset.pairs_file=data/pairs.parquet \
+        dataset.prices_dir=data/raw \
+        trainer.max_epochs=${epochs}
+    deps:
+      - src
+      - data/pairs.parquet
+    outs:
+      - runs/${model_name}.ckpt
+    params:
+      - epochs
+      - model_name
