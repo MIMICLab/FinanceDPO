@@ -62,12 +62,12 @@ python src/train.py \
 ### 5. Evaluate & back-test
 ```bash
 # Pairwise metrics
-python src/eval.py --checkpoint runs/latest.ckpt \
+python src/eval.py --checkpoint latest.ckpt \
                    --pairs-file data/pairs.parquet 
 # Simple daily long/short strategy
-python src/backtest.py --checkpoint runs/latest.ckpt --prices-dir data/raw
+python src/backtest.py --checkpoint latest.ckpt --prices-dir data/raw
 ```
-> Tip: save checkpoints with a timestamp (e.g. `runs/latest.ckpt`) to avoid accidental overwrites.
+> Tip: save checkpoints with a timestamp to avoid accidental overwrites.
 
 If you trained from the cache only (skipped the Parquet), pass `--cache-file` instead of `--pairs-file` to `eval.py`.
 
@@ -99,6 +99,33 @@ params:
 ```
 
 The sweeper maximises the **first** metric that you log with `prog_bar=True`; we recommend logging a risk‑adjusted metric such as `val_sharpe`.
+
+  
+
+### 7. Fine‑tune a single symbol with a frozen reference net
+
+You can first train a **broad, market‑wide model** (e.g. on all S&P 500 pairs),
+then fine‑tune it for a specific symbol while keeping the original behaviour
+as a reference via a small KL penalty:
+
+```bash
+# 7‑a. Train a base model on the full S&P 500 cache
+python src/train.py \
+    dataset.cache_file=data/sp500_pairs_cache.pt \
+    trainer.max_epochs=20 \
+    +train.kl_coeff=0           # KL off
+
+# 7‑b. Fine‑tune on AAPL only, pulling against the frozen base net
+python src/train.py \
+    dataset.cache_file=data/aapl_pairs_cache.pt \
+    +model.init_from=runs/sp500_base.ckpt \
+    +train.kl_coeff=0.05        # small KL to retain global knowledge
+```
+
+The first command produces `runs/sp500_base.ckpt`.  
+The second command loads that checkpoint as `reference_net`, freezes it
+internally, and trains a new policy that specialises on AAPL while being softly
+regularised toward the base model.
 
 ---
 

@@ -153,7 +153,7 @@ class DPOModel(pl.LightningModule):
         else:
             loss = self.dpo_loss(s_good, s_bad)
 
-        # ── optional KL regularisation ───────────────────────────────────
+        # ── optional KL regularization ───────────────────────────────────
         kl_coeff = self.cfg.train.get("kl_coeff", 0.0)
         if self.reference_net is not None and kl_coeff > 0:
             with torch.no_grad():
