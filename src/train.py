@@ -13,7 +13,6 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 from dpo_forecasting.models.dpo_model import DPOModel
 from dpo_forecasting.data.dataset import PreferenceDataModule
-from dpo_forecasting.utils.device import get_device
 
 
 
@@ -41,9 +40,8 @@ def main(cfg: DictConfig) -> None:
     dm.setup()  # <--- ensure num_features populated
 
     # Model --------------------------------------------------------------
-    OmegaConf.update(cfg, "model.input_dim", dm.num_features)  # ←★ cfg 수정
-    model = DPOModel(cfg).to(get_device())   
-    print(f"[INFO] model: {model.__class__.__name__} → {get_device()}")
+    model = DPOModel(cfg)
+    print(f"[INFO] model: {model.__class__.__name__}")
 
     # Logger -------------------------------------------------------------
     tb_logger = build_logger(cfg)

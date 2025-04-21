@@ -3,14 +3,16 @@
 dataset:
   pairs_file: data/pairs.parquet
   prices_dir: data/raw
-  lookback: 30
+  lookback: 7
   batch_size: 256
   num_workers: 4
   val_fraction: 0.1
 
 model:
-  input_dim: 29
-  hidden_sizes: [256, 256]
+  d_model: 64      # transformer hidden size
+  n_heads: 4
+  ff_dim: 256
+  n_layers: 2
 
 train:
   lr: 3.0e-4

@@ -14,12 +14,12 @@ import argparse
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-import numpy as np
 import pandas as pd
 import torch
+import numpy as np
 from tqdm import tqdm
 
-from dpo_forecasting.data.dataset import ReturnWindowExtractor
+from dpo_forecasting.data.extractors import ReturnWindowExtractor
 from dpo_forecasting.models.dpo_model import DPOModel
 from dpo_forecasting.utils.device import get_device
 
@@ -56,12 +56,15 @@ def calc_metrics(ret: np.ndarray) -> Dict[str, float]:
 
 
 def softmax_clip(x: np.ndarray, cap: float) -> np.ndarray:
-    x = x.copy()
     x[np.isneginf(x)] = -1e9
     e = np.exp(x - np.nanmax(x))
-    w = e / e.sum() if e.sum() else e
+    s = e.sum()
+    if s == 0 or np.isclose(s, 0):
+        return np.zeros_like(x)
+    w = e / s
     w = np.clip(w, 0, cap)
-    return w / w.sum() if w.sum() else w
+    s2 = w.sum()
+    return w / s2 if s2 else w
 
 # ───────────────────────────── back‑test core ───────────────────────────────
 
@@ -111,7 +114,7 @@ def backtest(
         # --- realise pnl for expiring slice ---
         pnl_long = pos_long[:, 0] * (close[:, t] / close[:, t - hold] - 1)
         pnl_short = -pos_short[:, 0] * (close[:, t] / close[:, t - hold] - 1)
-        day_ret = pnl_long.mean() + pnl_short.mean()
+        day_ret = pnl_long.sum() + pnl_short.sum()  # use notional sums
         cash *= 1 + day_ret
         port_ret_hist.append(day_ret)
         pos_long = np.roll(pos_long, -1, axis=1); pos_long[:, -1] = 0
@@ -121,14 +124,14 @@ def backtest(
         peak_eq = max(peak_eq, cash)
         if trail_stop and cash < peak_eq * (1 - trail_stop):
             break
-        if eq_stop and cash < 1 + eq_stop:
+        if eq_stop and cash < 1 - eq_stop:  # fix equity stop logic
             break
 
         # --- dynamic leverage ---
         lev = fixed_leverage
         if target_vol and len(port_ret_hist) >= vol_window:
             realised = np.std(port_ret_hist[-vol_window:], ddof=1)
-            if realised > 0:
+            if realised and np.isfinite(realised) and realised > 0:  # guard against NaN realised vol
                 lev = min(max_leverage, (target_vol / annualize(realised)))
         if vix_series is not None:
             lev = min(max_leverage, lev * vix_scale / vix_series.loc[date])
@@ -142,7 +145,8 @@ def backtest(
                 w_long = softmax_clip(np.where(scores > 0, scores, -np.inf), max_long)
                 w_short = softmax_clip(np.where(scores < 0, -scores, -np.inf), max_short)
             else:
-                w_long = softmax_clip(scores, max_long)
+                # long‑only: act only on positive scores
+                w_long = softmax_clip(np.where(scores > 0, scores, -np.inf), max_long)
                 w_short = np.zeros_like(w_long)
             new_long = lev * w_long
             new_short = lev * w_short
@@ -192,6 +196,24 @@ def main() -> None:
     device = get_device()
     model = DPOModel.load_from_checkpoint(args.checkpoint, map_location=device)
     model = model.to(device).eval()
+
+    # ------------------------------------------------------------------
+    # Ensure lookback length matches the model’s expected feature dim.
+    # ReturnWindowExtractor outputs (lookback - 1) simple‑return features,
+    # so required lookback = in_features + 1.
+    try:
+        in_dim = model.net[0].in_features  # assumes first layer is nn.Linear
+    except Exception:
+        in_dim = None
+    if in_dim is not None:
+        expected_lb = in_dim + 1
+        if args.lookback != expected_lb:
+            print(
+                f"[WARN] lookback={args.lookback} produces feature length {args.lookback - 1}, "
+                f"but model expects feature dim {in_dim}. Adjusting lookback to {expected_lb}."
+            )
+            args.lookback = expected_lb
+    # ------------------------------------------------------------------
 
     # load price CSVs
     price_dfs: Dict[str, pd.DataFrame] = {}

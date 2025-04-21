@@ -29,7 +29,7 @@ import torch
 from tqdm import tqdm
 
 from dpo_forecasting.models.dpo_model import DPOModel
-from dpo_forecasting.data.dataset import ReturnWindowExtractor
+from dpo_forecasting.data.extractors import ReturnWindowExtractor
 from dpo_forecasting.utils.device import get_device
 
 # ─────────────────────────────────────────────── metrics ──
@@ -137,6 +137,17 @@ def main():
     args = parse_args()
     device = get_device()
     model = DPOModel.load_from_checkpoint(args.checkpoint, map_location=device)
+    # ------------------------------------------------------------------
+    # Ensure lookback length matches the model’s expected input dim
+    in_dim = model.net[0].in_features  # assumes first layer is nn.Linear
+    expected_lookback = in_dim + 1     # ReturnWindowExtractor outputs (lookback-1)
+    if args.lookback != expected_lookback:
+        print(
+            f"[WARN] lookback={args.lookback} produces feature length {args.lookback-1}, "
+            f"but model expects {in_dim}. Adjusting lookback to {expected_lookback}."
+        )
+        args.lookback = expected_lookback
+    # ------------------------------------------------------------------
     metrics, equity = backtest(
         model,
         Path(args.prices_dir),
