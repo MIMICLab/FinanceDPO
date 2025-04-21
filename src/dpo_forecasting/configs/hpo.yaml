@@ -18,9 +18,9 @@ hydra:
     params:
       # ─── data / label generation ─────────────────────────────────────
       dataset.lookback:   "choice(21, 31, 61)"        # window lengths → feat dim 20/30/60
-      lookahead:          "choice(3, 7, 14, 21)"      # forward return horizon (days)
-      good_quantile:      "choice(0.75, 0.8)"         # top‑quartile vs quintile
-      bad_quantile:       "choice(0.25, 0.2)"         # bottom‑quartile vs quintile
+      dataset.lookahead:          "choice(3, 7, 14, 21)"      # forward return horizon (days)
+      dataset.good_quantile:      "choice(0.75, 0.8)"         # top‑quartile vs quintile
+      dataset.bad_quantile:       "choice(0.25, 0.2)"         # bottom‑quartile vs quintile
 
       # ─── model (Transformer) ─────────────────────────────────────────
       model.d_model:      "choice(32, 64, 128)"

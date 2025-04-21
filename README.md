@@ -114,7 +114,7 @@ A tiny pipeline script regenerates preference pairs **and** trains the model for
 each trial, so you can safely vary `dataset.lookback` and `lookahead`:
 
 ```bash
-python -m dpo_forecasting.hpo_pipeline -m +hpo
+python -m src.hpo_pipeline -m +hpo=default
 ```
 
 * `-m` asks **Hydra** to launch a **multirun** (one process per Optuna trial).  
