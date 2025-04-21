@@ -38,16 +38,18 @@ def main(cfg: DictConfig) -> None:
         num_workers=cfg.dataset.num_workers,
         val_fraction=cfg.dataset.val_fraction,
     )
+    dm.setup()  # <--- ensure num_features populated
 
     # Model --------------------------------------------------------------
-    model = DPOModel(cfg).to(get_device())
+    OmegaConf.update(cfg, "model.input_dim", dm.num_features)  # ←★ cfg 수정
+    model = DPOModel(cfg).to(get_device())   
     print(f"[INFO] model: {model.__class__.__name__} → {get_device()}")
 
     # Logger -------------------------------------------------------------
     tb_logger = build_logger(cfg)
 
     # Trainer ------------------------------------------------------------
-    trainer = pl.Trainer(logger=tb_logger, accelerator='auto', **cfg.trainer)
+    trainer = pl.Trainer(logger=tb_logger, **cfg.trainer)
     trainer.fit(model, datamodule=dm)
 
 

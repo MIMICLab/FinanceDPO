@@ -12,6 +12,7 @@ optuna>=3.6.0          # 하이퍼파라미터 탐색
 yfinance>=0.2.35       # 가격 데이터 다운로드
 finta>=1.3             # 간단 기술지표 (Pure‑Python)
 pyarrow>=14.0.0         # Parquet 파일 읽기/쓰기
+tensorboardX>=2.16.0      # TensorBoardX는 PyTorch Lightning과 호환됨
 # ----------------------------- logging / viz -----------------------------
 tensorboard>=2.16.0
 matplotlib>=3.8.0      # (백테스트 결과 그래프 등)
