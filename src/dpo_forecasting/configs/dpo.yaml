@@ -23,6 +23,7 @@ train:
   kl_coeff: 0.02
 
 trainer:
+  auto_scale_batch_size: power   # or binsearch
   max_epochs: 30
   accelerator: auto
   devices: 1
