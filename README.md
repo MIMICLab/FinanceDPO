@@ -60,15 +60,26 @@ python src/train.py \
 
 ### 5. Evaluate & back-test
 ```bash
-# Pairwise metrics
+# 5‑a. Pairwise accuracy / ROC
 python src/eval.py --checkpoint latest.ckpt \
-                   --pairs-file data/pairs.parquet 
-# Simple daily long/short strategy
-python src/backtest.py --checkpoint latest.ckpt --prices-dir data/raw
-```
-> Tip: save checkpoints with a timestamp to avoid accidental overwrites.
+                   --pairs-file data/pairs.parquet     # or --cache-file
 
-If you trained from the cache only (skipped the Parquet), pass `--cache-file` instead of `--pairs-file` to `eval.py`.
+# 5‑b. Quick daily long/short strategy
+python src/backtest.py --checkpoint latest.ckpt \
+                       --prices-dir data/raw
+
+# 5‑c. Advanced back‑test (position sizing, stop‑loss, leverage, cost)
+python src/advanced_backtest.py --checkpoint latest.ckpt \
+                                --prices-dir data/raw \
+                                --lookback 31 --hold 5 \
+                                --score-thresh 0.5 \
+                                --max-long 0.3 --max-short 0.1 \
+                                --cost-bps 5
+```
+`advanced_backtest.py` applies position‑scaled weights, transaction costs,
+and optional equity stops, giving a closer approximation to live
+portfolio behaviour.  Adjust `--hold`, `--max-long`, `--cost-bps` and other
+flags to reflect your trading assumptions.
 
 ### 6. Fine‑tune a single symbol with a frozen reference net
 

@@ -138,15 +138,18 @@ def main():
     device = get_device()
     model = DPOModel.load_from_checkpoint(args.checkpoint, map_location=device)
     # ------------------------------------------------------------------
-    # Ensure lookback length matches the model’s expected input dim
-    in_dim = model.net[0].in_features  # assumes first layer is nn.Linear
-    expected_lookback = in_dim + 1     # ReturnWindowExtractor outputs (lookback-1)
-    if args.lookback != expected_lookback:
-        print(
-            f"[WARN] lookback={args.lookback} produces feature length {args.lookback-1}, "
-            f"but model expects {in_dim}. Adjusting lookback to {expected_lookback}."
-        )
-        args.lookback = expected_lookback
+    # Ensure lookback length matches the model’s expected feature dim
+    try:
+        # Legacy MLP: first layer is nn.Linear
+        in_dim = model.net[0].in_features  # type: ignore[attr-defined]
+        expected_lookback = in_dim + 1
+    except AttributeError:
+        # Transformer variant: positional encoding length = lookback - 1
+        if hasattr(model, "pos_enc"):
+            L = model.pos_enc.pe.size(1)  # (1, L, d_model)
+            expected_lookback = int(L) + 1
+        else:
+            expected_lookback = args.lookback  # fallback – assume user is right
     # ------------------------------------------------------------------
     metrics, equity = backtest(
         model,

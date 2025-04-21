@@ -7,6 +7,7 @@ Versatile portfolio back‑test supporting:
 • Equity stop‑loss & trailing stop
 • Transaction cost + slippage
 • Device auto‑select (cuda → mps → cpu)
+• Score thresholding
 """
 from __future__ import annotations
 
@@ -83,6 +84,7 @@ def backtest(
     long_short: bool,
     max_long: float,
     max_short: float,
+    score_thresh: float,
     cost_bps: float,
     slip_pct: float,
     eq_stop: Optional[float],
@@ -141,12 +143,14 @@ def backtest(
             feats = np.stack([extractor(close[i], t) for i in range(S)])
             with torch.no_grad():
                 scores = model(torch.from_numpy(feats).to(device)).cpu().numpy()
+            pos_mask = scores >  score_thresh
+            neg_mask = scores < -score_thresh
             if long_short:
-                w_long = softmax_clip(np.where(scores > 0, scores, -np.inf), max_long)
-                w_short = softmax_clip(np.where(scores < 0, -scores, -np.inf), max_short)
+                w_long  = softmax_clip(np.where(pos_mask,  scores, -np.inf), max_long)
+                w_short = softmax_clip(np.where(neg_mask, -scores, -np.inf), max_short)
             else:
-                # long‑only: act only on positive scores
-                w_long = softmax_clip(np.where(scores > 0, scores, -np.inf), max_long)
+                # long‑only: act only on sufficiently positive scores
+                w_long  = softmax_clip(np.where(pos_mask, scores, -np.inf), max_long)
                 w_short = np.zeros_like(w_long)
             new_long = lev * w_long
             new_short = lev * w_short
@@ -180,6 +184,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--vix-scale", type=float, default=20.0)
 
     p.add_argument("--long-short", action="store_true")
+    p.add_argument("--score-thresh", type=float, default=0.0,
+                   help="Ignore signals whose |score| is below this threshold")
     p.add_argument("--max-long", type=float, default=0.1)
     p.add_argument("--max-short", type=float, default=0.05)
 
@@ -199,20 +205,27 @@ def main() -> None:
 
     # ------------------------------------------------------------------
     # Ensure lookback length matches the model’s expected feature dim.
-    # ReturnWindowExtractor outputs (lookback - 1) simple‑return features,
-    # so required lookback = in_features + 1.
-    try:
-        in_dim = model.net[0].in_features  # assumes first layer is nn.Linear
-    except Exception:
-        in_dim = None
-    if in_dim is not None:
-        expected_lb = in_dim + 1
-        if args.lookback != expected_lb:
-            print(
-                f"[WARN] lookback={args.lookback} produces feature length {args.lookback - 1}, "
-                f"but model expects feature dim {in_dim}. Adjusting lookback to {expected_lb}."
-            )
-            args.lookback = expected_lb
+    # Works for both legacy MLP (model.net[0].in_features)
+    # and Transformer variant (pos_enc.pe.shape[1] == lookback-1).
+    expected_lb = None
+    if hasattr(model, "net"):  # MLP
+        try:
+            in_dim = model.net[0].in_features  # type: ignore[attr-defined]
+            expected_lb = in_dim + 1
+        except Exception:
+            pass
+    if expected_lb is None and hasattr(model, "pos_enc"):
+        try:
+            L = model.pos_enc.pe.size(1)  # (1, L, d_model)
+            expected_lb = int(L) + 1
+        except Exception:
+            pass
+    if expected_lb and args.lookback != expected_lb:
+        print(
+            f"[WARN] lookback={args.lookback} produces feature length {args.lookback - 1}, "
+            f"but model expects feature dim {expected_lb - 1}. Adjusting lookback to {expected_lb}."
+        )
+        args.lookback = expected_lb
     # ------------------------------------------------------------------
 
     # load price CSVs
@@ -245,6 +258,7 @@ def main() -> None:
         long_short=args.long_short,
         max_long=args.max_long,
         max_short=args.max_short,
+        score_thresh=args.score_thresh,
         cost_bps=args.cost_bps,
         slip_pct=args.slip_pct,
         eq_stop=args.eq_stop,
