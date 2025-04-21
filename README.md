@@ -56,7 +56,6 @@ python -m dpo_forecasting.data.make_pairs \
 python src/train.py \
    dataset.cache_file=data/pairs_cache.pt \
    trainer.max_epochs=30
-# (Uses Hydra: default config is configs/dpo.yaml; override with +key=value)
 ```
 
 ### 5. Evaluate & back-test
@@ -71,38 +70,7 @@ python src/backtest.py --checkpoint latest.ckpt --prices-dir data/raw
 
 If you trained from the cache only (skipped the Parquet), pass `--cache-file` instead of `--pairs-file` to `eval.py`.
 
-### 6. Hyperparameter optimization (Optuna + Hydra)
-
-A ready‑made config file `configs/hpo.yaml` lets you launch a multirun sweep with Optuna:
-
-```bash
-python src/train.py -m +hpo
-```
-
-* `-m` tells **Hydra** to execute a **multirun**, spawning one process per trial.  
-* `+hpo` overrides the default settings with `configs/hpo.yaml`, which  
-  – switches the Hydra **sweeper** to Optuna,  
-  – sets `n_trials`, search spaces, and the target metric.
-
-Trials are saved under `multirun/DATE_TIME/{0,1,2,…}/`.  
-Open `optuna.log` in that folder to see the best parameters and their scores.
-
-To customise the search space or the number of trials, edit `configs/hpo.yaml`:
-
-```yaml
-hydra:
-  sweeper:
-    n_trials: 50        # increase for a wider search
-params:
-  train.lr:          "loguniform(1e-5,1e-3)"
-  model.hidden_dim:  "choice(128,256,512)"
-```
-
-The sweeper maximizes the **first** metric that you log with `prog_bar=True`; we recommend logging a risk‑adjusted metric such as `val_sharpe`.
-
-  
-
-### 7. Fine‑tune a single symbol with a frozen reference net
+### 6. Fine‑tune a single symbol with a frozen reference net
 
 You can first train a **broad, market‑wide model** (e.g. on all S&P 500 pairs),
 then fine‑tune it for a specific symbol while keeping the original behaviour
@@ -126,6 +94,32 @@ The first command produces `runs/sp500_base.ckpt`.
 The second command loads that checkpoint as `reference_net`, freezes it
 internally, and trains a new policy that specializes on AAPL while being softly
 regularized toward the base model.
+
+### 7. Hyperparameter optimization — end‑to‑end (pairs + training)
+
+The file `configs/hpo.yaml` defines a search space for **lookback / lookahead**,
+model size, learning rate, etc.  
+A tiny pipeline script regenerates preference pairs **and** trains the model for
+each trial, so you can safely vary `dataset.lookback` and `lookahead`:
+
+```bash
+python -m dpo_forecasting.hpo_pipeline -m +hpo
+```
+
+* `-m` asks **Hydra** to launch a **multirun** (one process per Optuna trial).  
+* The pipeline calls  
+  1) `data.make_pairs` → creates a unique cache file  
+  2) `train.py` → trains on that cache and prints `val_sharpe`  
+* Optuna maximizes the first metric logged with `prog_bar=True`; we recommend
+  `val_sharpe`.
+
+Results are stored under `multirun/YYYY-MM-DD/HH-MM-SS/{0,1,2,…}/`.  
+Open `optuna.log` there to see the best hyper‑parameters.
+
+> **Tip :** edit `configs/hpo.yaml` to add or widen ranges, e.g.  
+> `dataset.lookback: "choice(21, 31, 61, 91)"`.
+  
+
 
 ---
 

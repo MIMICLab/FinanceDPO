@@ -10,13 +10,28 @@ hydra:
     _target_: hydra_plugins.hydra_optuna_sweeper.optuna_sweeper.OptunaSweeper
     sampler:
       _target_: optuna.samplers.TPESampler
-    direction: maximize  # we’ll maximize val_loss *(-1) in objective; override if needed
+    direction: maximize  # the pipeline logs val_sharpe; maximise it
     study_name: dpo_hpo
     storage: null  # in‑memory; set to sqlite:///study.db for persistence
     n_trials: 30
     n_jobs: 1
     params:
-      model.hidden_sizes: "choice([[128,128],[256,256],[256,128,64]])"
-      train.lr: "loguniform(1e-5,1e-3)"
-      train.kl_coeff: "uniform(0.0,0.1)"
-      trainer.max_epochs: "choice(10,15,20)"
+      # ─── data / label generation ─────────────────────────────────────
+      dataset.lookback:   "choice(21, 31, 61)"        # window lengths → feat dim 20/30/60
+      lookahead:          "choice(3, 7, 14, 21)"      # forward return horizon (days)
+      good_quantile:      "choice(0.75, 0.8)"         # top‑quartile vs quintile
+      bad_quantile:       "choice(0.25, 0.2)"         # bottom‑quartile vs quintile
+
+      # ─── model (Transformer) ─────────────────────────────────────────
+      model.d_model:      "choice(32, 64, 128)"
+      model.n_layers:     "choice(2, 3)"
+      model.n_heads:      "choice(4, 8)"
+      model.ff_dim:       "choice(128, 256, 512)"
+
+      # ─── optimiser / training ────────────────────────────────────────
+      train.lr:           "loguniform(1e-5, 1e-3)"
+      train.kl_coeff:     "choice(0.0, 0.05)"         # KL off vs small regularisation
+      trainer.max_epochs: "choice(10, 15, 20)"
+      
+# Run sweep:
+#   python -m dpo_forecasting.hpo_pipeline -m +hpo
