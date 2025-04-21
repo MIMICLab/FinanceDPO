@@ -1,0 +1,3 @@
+- dataset.pairs_file=data/pairs.parquet
+- dataset.prices_dir=data/raw
+- trainer.max_epochs=30
