@@ -13,6 +13,8 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 from dpo_forecasting.models.dpo_model import DPOModel
 from dpo_forecasting.data.dataset import PreferenceDataModule
+from dpo_forecasting.utils.device import get_device
+
 
 
 def build_logger(cfg: DictConfig):
@@ -38,13 +40,14 @@ def main(cfg: DictConfig) -> None:
     )
 
     # Model --------------------------------------------------------------
-    model = DPOModel(cfg)
+    model = DPOModel(cfg).to(get_device())
+    print(f"[INFO] model: {model.__class__.__name__} → {get_device()}")
 
     # Logger -------------------------------------------------------------
     tb_logger = build_logger(cfg)
 
     # Trainer ------------------------------------------------------------
-    trainer = pl.Trainer(logger=tb_logger, **cfg.trainer)
+    trainer = pl.Trainer(logger=tb_logger, accelerator='auto', **cfg.trainer)
     trainer.fit(model, datamodule=dm)
 
 

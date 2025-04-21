@@ -28,7 +28,7 @@ from tqdm import tqdm
 
 from dpo_forecasting.models.dpo_model import DPOModel
 from dpo_forecasting.data.dataset import PreferencePairDataset, ReturnWindowExtractor
-
+from dpo_forecasting.utils.device import get_device
 
 # ───────────────────────────────────────────── CLI ──
 
@@ -73,11 +73,12 @@ def evaluate(model: DPOModel, dl: DataLoader) -> Dict[str, float]:
 
 def main():
     args = parse_args()
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = get_device()
 
     # Load model (without trainer for simplicity)
     model = DPOModel.load_from_checkpoint(args.checkpoint, map_location=device)
-    model.to(device)
+    model = model.to(device).eval()
+    print(f"[INFO] model: {model.__class__.__name__} → {device}")
 
     dataset = PreferencePairDataset(
         Path(args.pairs_file), Path(args.prices_dir), lookback=args.lookback, cache_data=True
