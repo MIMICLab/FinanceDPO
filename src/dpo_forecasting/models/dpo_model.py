@@ -69,13 +69,14 @@ class DPOModel(pl.LightningModule):
         self,
         cfg: Dict[str, Any],
         reference_net: Optional[nn.Module] = None,
+        lookback: Optional[int] = None,
     ) -> None:
         super().__init__()
         self.save_hyperparameters(ignore=["reference_net"])
         self.cfg = cfg
         self.reference_net = reference_net
 
-        L = cfg.dataset.lookback - 1  # sequence length
+        L = lookback - 1  # sequence length
         d_model: int = cfg.model.get("d_model", 64)
         n_heads: int = cfg.model.get("n_heads", 4)
         ff_dim: int = cfg.model.get("ff_dim", 256)

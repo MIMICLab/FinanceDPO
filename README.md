@@ -41,18 +41,20 @@ python src/dpo_forecasting/data/download.py \
 
 ### 3. Generate preference pairs
 ```bash
-python src/dpo_forecasting/data/make_pairs.py \
-   --prices-dir data/raw \
-   --lookahead 7 \
-   --good-quantile 0.8 --bad-quantile 0.2 \
-   --out-file data/pairs.parquet
+python -m dpo_forecasting.data.make_pairs \
+    --prices-dir data/raw \
+    --lookahead 7  --lookback 31 \
+    --good-quantile 0.8 --bad-quantile 0.2 \
+    --cache-file data/pairs_cache.pt \
+    --skip-parquet             # (선택) Parquet 건너뛰기
 ```
+> If you supply `--skip-parquet`, only the Torch cache (`pairs_cache.pt`) is written.  
+> Keep the `--skip-parquet` flag **off** if you still want a `.parquet` file for evaluation utilities that expect it.
 
 ### 4. Train a DPO model
 ```bash
 python src/train.py \
-   dataset.pairs_file=data/pairs.parquet \
-   dataset.prices_dir=data/raw \
+   dataset.cache_file=data/pairs_cache.pt \
    trainer.max_epochs=30
 # (Uses Hydra: default config is configs/dpo.yaml; override with +key=value)
 ```
@@ -67,6 +69,7 @@ python src/backtest.py --checkpoint runs/latest.ckpt --prices-dir data/raw
 ```
 > Tip: save checkpoints with a timestamp (e.g. `runs/latest.ckpt`) to avoid accidental overwrites.
 
+If you trained from the cache only (skipped the Parquet), pass `--cache-file` instead of `--pairs-file` to `eval.py`.
 
 ### 6. Hyperparameter optimization (Optuna + Hydra)
 

@@ -24,15 +24,20 @@ from torch.utils.data import DataLoader
 from sklearn.metrics import roc_auc_score, log_loss
 from tqdm import tqdm
 
+import numpy as np
+from dpo_forecasting.data.dataset import (
+    PairwiseDataset as PreferencePairDataset,
+    CachedPairwiseDataset,
+)
 from dpo_forecasting.models.dpo_model import DPOModel
-from dpo_forecasting.data.dataset import PairwiseDataset as PreferencePairDataset
-from dpo_forecasting.utils.device import get_device
+
 # ───────────────────────────────────────────── CLI ──
 
 def parse_args():
     p = argparse.ArgumentParser(description="Evaluate DPO model on preference pairs.")
     p.add_argument("--checkpoint", required=True, type=str, help="Path to Lightning checkpoint (.ckpt)")
-    p.add_argument("--pairs-file", required=True, type=str)
+    p.add_argument("--pairs-file", type=str, help="Pairs parquet (if no cache file)")
+    p.add_argument("--cache-file", type=str, help="Path to .pt cache file (optional)")
     p.add_argument("--batch-size", type=int, default=1024)
     p.add_argument("--num-workers", type=int, default=4)
     return p.parse_args()
@@ -72,14 +77,25 @@ def evaluate(model: DPOModel, dl: DataLoader, device: torch.device) -> Dict[str,
 
 def main():
     args = parse_args()
-    device = get_device()
+    device = torch.device(
+        "cuda" if torch.cuda.is_available()
+        else "mps" if torch.backends.mps.is_available()
+        else "cpu"
+    )
 
     # Load model (without trainer for simplicity)
     model = DPOModel.load_from_checkpoint(args.checkpoint, map_location=device)
     model = model.to(device).eval()
     print(f"[INFO] model: {model.__class__.__name__} → {device}")
 
-    dataset = PreferencePairDataset(args.pairs_file)
+    if args.cache_file and Path(args.cache_file).exists():
+        print(f"[INFO] loading CachedPairwiseDataset from {args.cache_file}")
+        dataset = CachedPairwiseDataset(args.cache_file)
+    elif args.pairs_file:
+        dataset = PreferencePairDataset(args.pairs_file)
+    else:
+        raise ValueError("Provide either --cache-file or --pairs-file.")
+
     dl = DataLoader(
         dataset,
         batch_size=args.batch_size,

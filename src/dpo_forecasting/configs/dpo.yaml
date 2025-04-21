@@ -1,9 +1,9 @@
 # Default configuration for DPO‑Finance training
 
 dataset:
+  cache_file: data/pairs_cache.pt
   pairs_file: data/pairs.parquet
   prices_dir: data/raw
-  lookback: 7
   batch_size: 256
   num_workers: 4
   val_fraction: 0.1
