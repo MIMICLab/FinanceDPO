@@ -98,7 +98,7 @@ params:
   model.hidden_dim:  "choice(128,256,512)"
 ```
 
-The sweeper maximises the **first** metric that you log with `prog_bar=True`; we recommend logging a risk‑adjusted metric such as `val_sharpe`.
+The sweeper maximizes the **first** metric that you log with `prog_bar=True`; we recommend logging a risk‑adjusted metric such as `val_sharpe`.
 
   
 
@@ -124,8 +124,8 @@ python src/train.py \
 
 The first command produces `runs/sp500_base.ckpt`.  
 The second command loads that checkpoint as `reference_net`, freezes it
-internally, and trains a new policy that specialises on AAPL while being softly
-regularised toward the base model.
+internally, and trains a new policy that specializes on AAPL while being softly
+regularized toward the base model.
 
 ---
 
