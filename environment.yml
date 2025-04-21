@@ -1,0 +1,19 @@
+name: dpo-finance
+channels:
+  - conda-forge
+  - pytorch
+dependencies:
+  - python>=3.9
+  - pytorch
+  - pytorch-lightning
+  - numpy
+  - pandas
+  - scikit-learn
+  - hydra-core
+  - optuna
+  - yfinance
+  - wandb
+  - pip
+  - pip:
+      - ta-lib
+      - finta
