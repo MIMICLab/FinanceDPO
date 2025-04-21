@@ -30,7 +30,7 @@ from tqdm import tqdm
 
 from dpo_forecasting.models.dpo_model import DPOModel
 from dpo_forecasting.data.dataset import ReturnWindowExtractor
-
+from dpo_forecasting.utils.device import get_device
 
 # ─────────────────────────────────────────────── metrics ──
 
@@ -135,7 +135,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = get_device()
     model = DPOModel.load_from_checkpoint(args.checkpoint, map_location=device)
     metrics, equity = backtest(
         model,

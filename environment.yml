@@ -2,6 +2,7 @@ name: dpo-finance
 channels:
   - conda-forge
   - pytorch
+  
 dependencies:
   - python>=3.9
   - pytorch
@@ -13,7 +14,8 @@ dependencies:
   - optuna
   - yfinance
   - wandb
+  - pyarrow
   - pip
   - pip:
-      - ta-lib
       - finta
+  
