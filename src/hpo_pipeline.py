@@ -55,12 +55,21 @@ def main(cfg: DictConfig):
 
     # ------------- 2. train -----------------------------------------
     train_cmd = [
-        sys.executable, "src/train.py",
+        sys.executable,
+        "src/train.py",
+        # cache path is always overridden
         f"dataset.cache_file={cache_file}",
+        # propagate any swept dataset + trainer keys
+        f"dataset.batch_size={cfg.dataset.batch_size}",
+        f"trainer.auto_scale_batch_size={cfg.trainer.auto_scale_batch_size}",
         f"trainer.max_epochs={cfg.trainer.max_epochs}",
+        # optimiser
         f"train.lr={cfg.train.lr}",
         f"train.kl_coeff={cfg.train.kl_coeff}",
     ]
+    if "model" in cfg and cfg.model:
+        for k, v in cfg.model.items():
+            train_cmd.append(f"model.{k}={v}")  # overwrite existing keys
     subprocess.check_call(train_cmd, env=env)
 
     # Lightning prints metrics as JSON; Optuna sweeper parses the first
