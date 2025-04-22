@@ -35,7 +35,7 @@ import pandas as pd
 from extractors import ReturnWindowExtractor
 import torch
 from omegaconf import OmegaConf
-
+from omegaconf import DictConfig
 
 # ───────────────────────────────────────────────────────── helpers ──
 
@@ -108,7 +108,7 @@ def make_pairs_for_symbol(df: pd.DataFrame, lookahead: int, gq: float, bq: float
 
 # ───────────────────────────────────────────────────────────── main ──
 
-def main() -> None:
+def main(cfg: DictConfig) -> None:
     print(f"[INFO] lookahead={cfg.dataset.lookahead}, lookback={cfg.dataset.lookback}, "
           f"pairs→{Path(cfg.dataset.pairs_file).name}, cache→{Path(cfg.dataset.cache_file).name}")
     prices_dir = Path(cfg.dataset.prices_dir)

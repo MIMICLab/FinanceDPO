@@ -33,7 +33,7 @@ conda activate dpo-finance
 
 ### 2. Download raw price data (example: S&P 500)
 ```bash
-python src/dpo_forecasting/data/download.py \
+python src/dpo_forecasting/preprocessing/download.py \
     --symbols-file data/sp500.txt \
     --start 2000-01-01
 ```
@@ -41,7 +41,7 @@ python src/dpo_forecasting/data/download.py \
 
 ### 3. Generate preference pairs
 ```bash
-python src/dpo_forecasting/data/make_pairs.py \
+python src/dpo_forecasting/preprocessing/make_pairs.py \
     --config src/dpo_forecasting/configs/findpo_base.yaml
 ```
 
