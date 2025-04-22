@@ -13,7 +13,7 @@ Usage example::
 
     python src/backtest.py \
         --checkpoint runs/best.ckpt \
-        --prices-dir data/raw \
+        --prices_dir data/raw \
         --lookback 30 \
         --upper 0.7 --lower 0.3
 """
@@ -125,7 +125,7 @@ def backtest(
 def parse_args():
     p = argparse.ArgumentParser(description="Daily long/short back‑test of DPO model")
     p.add_argument("--checkpoint", required=True)
-    p.add_argument("--prices-dir", required=True)
+    p.add_argument("--prices_dir", required=True)
     p.add_argument("--lookback", type=int, default=30)
     p.add_argument("--upper", type=float, default=0.7, help="Upper score percentile for long entry")
     p.add_argument("--lower", type=float, default=0.3, help="Lower score percentile for short entry")

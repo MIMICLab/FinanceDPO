@@ -171,7 +171,7 @@ def backtest(
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser("Advanced back‑test v4")
     p.add_argument("--checkpoint", required=True)
-    p.add_argument("--prices-dir", required=True)
+    p.add_argument("--prices_dir", required=True)
     p.add_argument("--lookback", type=int, default=30)
     p.add_argument("--rebalance", type=int, default=5)
     p.add_argument("--hold", type=int, default=10)
