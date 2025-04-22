@@ -15,7 +15,7 @@ import torch
 from pathlib import Path
 
 from dpo_forecasting.models.dpo_model import DPOModel
-from dpo_forecasting.data.dataset import PreferenceDataModule
+from dpo_forecasting.preprocessing.dataset import PreferenceDataModule
 from dpo_forecasting.utils.device import get_device
 
 import pandas as pd
@@ -92,9 +92,8 @@ def main(cfg: DictConfig) -> None:
         new_bs = tuner.scale_batch_size(
             model,
             datamodule=dm,
-            mode="binsearch",          # power → binsearch
-            max_trials=7,              # 2^8 = 256×; 32 → 8192 사이
-            init_val=64,               # 시작 배치
+            mode="power",         
+            init_val=64,         
         )
         cfg.dataset.batch_size = int(new_bs)
         print(f"[INFO] batch_size tuned → {new_bs}")

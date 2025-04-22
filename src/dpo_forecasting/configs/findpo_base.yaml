@@ -7,7 +7,7 @@ dataset:
   batch_size: auto
   num_workers: 4
   val_fraction: 0.1
-  lookback: 256     # days back for features
+  lookback: 365     # days back for features
   lookahead: 7        # days ahead for label
   good_quantile: 0.8  # top‑20 % good
   bad_quantile: 0.2   # bottom‑20 % bad

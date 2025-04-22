@@ -1,0 +1,34 @@
+# Default configuration for DPO‑Finance training
+
+dataset:
+  cache_file: data/pairs_cache.pt
+  pairs_file: data/pairs.parquet
+  prices_dir: data/raw
+  batch_size: auto
+  num_workers: 4
+  val_fraction: 0.1
+  lookback: 365     # days back for features
+  lookahead: 7        # days ahead for label
+  good_quantile: 0.8  # top‑20 % good
+  bad_quantile: 0.2   # bottom‑20 % bad
+
+model:
+  d_model: 1024      # transformer hidden size
+  n_heads: 16
+  ff_dim: 4096
+  n_layers: 24
+
+train:
+  lr: 3.0e-4
+  kl_coeff: 0.05
+
+trainer:
+  max_epochs: 30
+  accelerator: auto
+  devices: 1
+  log_every_n_steps: 50
+  precision: 16-mixed
+
+logger:
+  use_tb: true              # set false to disable TensorBoard
+  experiment_name: dpo
