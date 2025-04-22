@@ -34,25 +34,7 @@ import numpy as np
 import pandas as pd
 from extractors import ReturnWindowExtractor
 import torch
-
-
-# ───────────────────────────────────────────────────────────── CLI parsing ──
-
-def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Create good/bad preference pairs from OHLCV CSVs.")
-    p.add_argument("--prices-dir", required=True, type=str, help="Directory of CSV files from download.py")
-    p.add_argument("--lookahead", type=int, default=20, help="Forward horizon in trading days (default: 20)")
-    p.add_argument("--lookback", type=int, default=31,
-                   help="Number of close prices per window (default: 31 → feature dim 30)")
-    p.add_argument("--good-quantile", type=float, default=0.8, help="Quantile for good label (default: 0.8)")
-    p.add_argument("--bad-quantile", type=float, default=0.2, help="Quantile for bad label (default: 0.2)")
-    p.add_argument("--min-samples", type=int, default=50, help="Skip symbols with fewer samples than this")
-    p.add_argument("--out-file", type=str, default="data/pairs.parquet", help="Output Parquet file")
-    p.add_argument("--cache-file", type=str, default="data/pairs_cache.pt",
-                   help="Torch cache file for fast loading (default: data/pairs_cache.pt)")
-    p.add_argument("--skip-parquet", action="store_true",
-                   help="If set, do not write the intermediate Parquet file")
-    return p.parse_args()
+from omegaconf import OmegaConf
 
 
 # ───────────────────────────────────────────────────────── helpers ──
@@ -127,11 +109,10 @@ def make_pairs_for_symbol(df: pd.DataFrame, lookahead: int, gq: float, bq: float
 # ───────────────────────────────────────────────────────────── main ──
 
 def main() -> None:
-    args = parse_args()
-    print(f"[INFO] lookahead={args.lookahead}, lookback={args.lookback}, "
-          f"pairs→{Path(args.out_file).name}, cache→{Path(args.cache_file).name}")
-    prices_dir = Path(args.prices_dir)
-    out_file = Path(args.out_file)
+    print(f"[INFO] lookahead={cfg.dataset.lookahead}, lookback={cfg.dataset.lookback}, "
+          f"pairs→{Path(cfg.dataset.pairs_file).name}, cache→{Path(cfg.dataset.cache_file).name}")
+    prices_dir = Path(cfg.dataset.prices_dir)
+    out_file = Path(cfg.dataset.pairs_file)
     out_file.parent.mkdir(parents=True, exist_ok=True)
 
     all_pairs: List[pd.DataFrame] = []
@@ -139,10 +120,10 @@ def main() -> None:
     for csv_path in prices_dir.glob("*.csv"):
         symbol = csv_path.stem.upper()
         df = load_price_csv(csv_path)
-        if len(df) < args.min_samples:
+        if len(df) < cfg.dataset.min_samples:
             continue
         pairs = make_pairs_for_symbol(
-            df, args.lookahead, args.good_quantile, args.bad_quantile, args.lookback
+            df, cfg.dataset.lookahead, cfg.dataset.good_quantile, cfg.dataset.bad_quantile, cfg.dataset.lookback
         )
         if pairs.empty:
             continue
@@ -156,7 +137,7 @@ def main() -> None:
     result = pd.concat(all_pairs, ignore_index=True)
 
     # ----------------------------------- save parquet (optional)
-    if not args.skip_parquet:
+    if not cfg.dataset.skip_parquet:
         result.to_parquet(out_file, index=False)
         print(f"[DONE] Wrote {len(result):,} pairs → {out_file}")
 
@@ -169,9 +150,18 @@ def main() -> None:
         "good_idx":  torch.arange(len(fg)),
         "bad_idx":   torch.arange(len(fb)),
     }
-    torch.save(cache_obj, args.cache_file)
-    print(f"[DONE] Cached tensors → {args.cache_file}")
+    torch.save(cache_obj, cfg.dataset.cache_file)
+    print(f"[DONE] Cached tensors → {cfg.dataset.cache_file}")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Train Finance‑DPO model")
+    parser.add_argument(
+        "--config",
+        "-c",
+        default="src/dpo_forecasting/configs/findpo_base.yaml",
+        help="Path to a YAML config file",
+    )
+    args = parser.parse_args()
+    cfg = OmegaConf.load(args.config)
+    main(cfg)

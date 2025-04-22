@@ -42,14 +42,8 @@ python src/dpo_forecasting/data/download.py \
 ### 3. Generate preference pairs
 ```bash
 python src/dpo_forecasting/data/make_pairs.py \
-    --prices-dir data/raw \
-    --lookahead 8  --lookback 64 \
-    --good-quantile 0.8 --bad-quantile 0.2 \
-    --cache-file data/pairs_cache.pt \
-    --skip-parquet             # (선택) Parquet 건너뛰기
+    --config src/dpo_forecasting/configs/findpo_base.yaml
 ```
-> If you supply `--skip-parquet`, only the Torch cache (`pairs_cache.pt`) is written.  
-> Keep the `--skip-parquet` flag **off** if you still want a `.parquet` file for evaluation utilities that expect it.
 
 ### 4. Train a DPO model
 ```bash
