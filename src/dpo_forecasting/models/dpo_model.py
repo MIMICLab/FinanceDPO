@@ -60,7 +60,7 @@ class DPOModel(pl.LightningModule):
             cfg.model.n_layers        # encoder layers
             cfg.train.lr             # float learning rate
             cfg.train.kl_coeff       # float (optional) – weight for KL term
-    reference_net : Optional[nn.Module]
+        reference_net : Optional[nn.Module]
         Frozen model p_ref(x) for KL regularization.  If provided, its outputs
         should be comparable (same scaling) to the main network.
     """

@@ -23,9 +23,10 @@ model:
 train:
   lr: 3.0e-4
   kl_coeff: 0.05
+  reference_net: "findpo_sp500_large.ckpt"  # pretrained model
 
 trainer:
-  max_epochs: 1
+  max_epochs: 5
   accelerator: auto
   devices: 1
   log_every_n_steps: 50

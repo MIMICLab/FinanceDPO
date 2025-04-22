@@ -82,10 +82,12 @@ as a reference via a small KL penalty:
 
 ```bash
 # 7‑a. Train a base model on the full S&P 500 cache
-python src/train.py --config src/configs/findpo_base.yaml
+python src/train.py --config src/configs/findpo_sp500_base.yaml
 
-# 7‑b. Fine‑tune on AAPL only, pulling against the frozen base net
-python src/train.py --config src/configs/findpo_base_appl.yaml
+# After saving latest ckpt stored in tb_logs/version_*/checkpoints,
+
+# 7‑b. Fine‑tune on MAG7, pulling against the frozen base net
+python src/train.py --config src/configs/findpo_mag7_base.yaml
 
 ```
 

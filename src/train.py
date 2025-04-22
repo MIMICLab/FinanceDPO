@@ -75,6 +75,27 @@ def main(cfg: DictConfig) -> None:
 
     # Model --------------------------------------------------------------
     model = DPOModel(cfg, lookback=inferred_lookback)
+    if cfg.model.get("reference_net"):
+        # Reference model for KL regularization
+        ref_model = DPOModel(cfg, lookback=inferred_lookback)
+        ref_model.load_state_dict(
+            torch.load(cfg.model.reference_net, map_location="cpu")
+        )
+        model.reference_net = ref_model
+        model.reference_net.eval()
+        model.reference_net.requires_grad_(False)
+        print(f"[INFO] reference model loaded from {cfg.model.reference_net}") 
+    else:
+        model.reference_net = None
+        print("[INFO] no reference model provided")
+    print(f"[INFO] lookback: {inferred_lookback}")
+    print(f"[INFO] batch_size: {cfg.dataset.batch_size}")
+    print(f"[INFO] num_workers: {cfg.dataset.num_workers}")
+    print(f"[INFO] val_fraction: {cfg.dataset.val_fraction}")
+    print(f"[INFO] cache_file: {cfg.dataset.cache_file}")
+    print(f"[INFO] pairs_file: {cfg.dataset.pairs_file}")
+    print(f"[INFO] prices_dir: {cfg.dataset.prices_dir}")
+    print(f"[INFO] reference_net: {cfg.model.reference_net}")  
     print(f"[INFO] model: {model.__class__.__name__}")
 
     # Logger -------------------------------------------------------------
