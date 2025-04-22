@@ -9,7 +9,7 @@ dataset:
   skip_parquet: false
   num_workers: 4
   val_fraction: 0.1
-  lookback: 32    # days back for features
+  lookback: 256    # days back for features
   lookahead: 8     # days ahead for label
   good_quantile: 0.8  # top‑20 % good
   bad_quantile: 0.2   # bottom‑20 % bad
