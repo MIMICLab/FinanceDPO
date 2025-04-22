@@ -25,7 +25,7 @@ train:
   kl_coeff: 0.05
 
 trainer:
-  max_epochs: 5
+  max_epochs: 1
   accelerator: auto
   devices: 1
   log_every_n_steps: 50
