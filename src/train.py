@@ -93,15 +93,6 @@ def main(cfg: DictConfig) -> None:
     else:
         model.reference_net = None
         print("[INFO] no reference model provided")
-    print(f"[INFO] lookback: {inferred_lookback}")
-    print(f"[INFO] batch_size: {cfg.dataset.batch_size}")
-    print(f"[INFO] num_workers: {cfg.dataset.num_workers}")
-    print(f"[INFO] val_fraction: {cfg.dataset.val_fraction}")
-    print(f"[INFO] cache_file: {cfg.dataset.cache_file}")
-    print(f"[INFO] pairs_file: {cfg.dataset.pairs_file}")
-    print(f"[INFO] prices_dir: {cfg.dataset.prices_dir}")
-    print(f"[INFO] reference_net: {cfg.model.reference_net}")  
-    print(f"[INFO] model: {model.__class__.__name__}")
 
     # Logger -------------------------------------------------------------
     tb_logger = build_logger(cfg)
