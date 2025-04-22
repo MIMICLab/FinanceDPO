@@ -9,8 +9,8 @@ dataset:
   skip_parquet: false
   num_workers: 4
   val_fraction: 0.1
-  lookback: 256    # days back for features
-  lookahead: 24     # days ahead for label
+  lookback: 32    # days back for features
+  lookahead: 8     # days ahead for label
   good_quantile: 0.8  # top‑20 % good
   bad_quantile: 0.2   # bottom‑20 % bad
 
@@ -25,7 +25,7 @@ train:
   kl_coeff: 0.05
 
 trainer:
-  max_epochs: 10
+  max_epochs: 5
   accelerator: auto
   devices: 1
   log_every_n_steps: 50
