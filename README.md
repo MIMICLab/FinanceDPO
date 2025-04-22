@@ -42,13 +42,13 @@ python src/dpo_forecasting/preprocessing/download.py \
 ### 3. Generate preference pairs
 ```bash
 python src/dpo_forecasting/preprocessing/make_pairs.py \
-    --config src/dpo_forecasting/configs/findpo_base.yaml
+    --config src/dpo_forecasting/configs/findpo_sp500_base.yaml # or other configs
 ```
 
 ### 4. Train a DPO model
 ```bash
 python src/train.py \
-    --config src/dpo_forecasting/configs/findpo_base.yaml
+    --config src/dpo_forecasting/configs/findpo_sp500_base.yaml # or other configs
 ```
 
 ### 5. Evaluate & back-test
