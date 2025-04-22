@@ -43,7 +43,7 @@ python src/dpo_forecasting/data/download.py \
 ```bash
 python src/dpo_forecasting/data/make_pairs.py \
     --prices-dir data/raw \
-    --lookahead 32  --lookback 256 \
+    --lookahead 8  --lookback 64 \
     --good-quantile 0.8 --bad-quantile 0.2 \
     --cache-file data/pairs_cache.pt \
     --skip-parquet             # (선택) Parquet 건너뛰기
