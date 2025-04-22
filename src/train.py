@@ -8,15 +8,15 @@ from __future__ import annotations
 
 import pytorch_lightning as pl
 from pytorch_lightning.tuner import Tuner
-import hydra
 from omegaconf import DictConfig
+from omegaconf import OmegaConf
+import argparse
 from pytorch_lightning.loggers import TensorBoardLogger
 import torch
 from pathlib import Path
 
 from dpo_forecasting.models.dpo_model import DPOModel
 from dpo_forecasting.preprocessing.dataset import PreferenceDataModule
-from dpo_forecasting.utils.device import get_device
 
 import pandas as pd
 import numpy as np
@@ -31,7 +31,7 @@ def build_logger(cfg: DictConfig):
     )
 
 
-@hydra.main(config_path="dpo_forecasting/configs", config_name="dpo", version_base=None)
+
 def main(cfg: DictConfig) -> None:
     # ------------------------------------------------------------
     # Infer look‑back automatically, preferring Torch cache if provided.
@@ -114,4 +114,13 @@ def main(cfg: DictConfig) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Train Finance‑DPO model")
+    parser.add_argument(
+        "--config",
+        "-c",
+        default="src/dpo_forecasting/configs/findpo_base.yaml",
+        help="Path to a YAML config file",
+    )
+    args = parser.parse_args()
+    cfg = OmegaConf.load(args.config)
+    main(cfg)

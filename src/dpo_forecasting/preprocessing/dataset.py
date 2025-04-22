@@ -3,7 +3,7 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import List
-from dpo_forecasting.data.extractors import ReturnWindowExtractor
+from dpo_forecasting.preprocessing.extractors import ReturnWindowExtractor
 
 import numpy as np
 import pandas as pd
