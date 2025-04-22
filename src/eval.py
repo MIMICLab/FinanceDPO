@@ -25,7 +25,7 @@ from sklearn.metrics import roc_auc_score, log_loss
 from tqdm import tqdm
 
 import numpy as np
-from dpo_forecasting.data.dataset import (
+from dpo_forecasting.preprocessing.dataset import (
     PairwiseDataset as PreferencePairDataset,
     CachedPairwiseDataset,
 )

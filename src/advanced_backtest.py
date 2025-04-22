@@ -20,7 +20,7 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
-from dpo_forecasting.data.extractors import ReturnWindowExtractor
+from dpo_forecasting.preprocessing.extractors import ReturnWindowExtractor
 from dpo_forecasting.models.dpo_model import DPOModel
 from dpo_forecasting.utils.device import get_device
 

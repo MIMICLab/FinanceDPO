@@ -4,8 +4,8 @@ import numpy as np
 import torch
 
 from dpo_forecasting.models.dpo_model import DPOModel
-from dpo_forecasting.data.dataset import ReturnWindowExtractor
-from dpo_forecasting.data.dataset import PreferencePairDataset
+from dpo_forecasting.preprocessing.dataset import ReturnWindowExtractor
+from dpo_forecasting.preprocessing.dataset import PreferencePairDataset
 
 
 def test_dpo_pairwise_loss():
