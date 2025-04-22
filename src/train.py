@@ -75,7 +75,12 @@ def main(cfg: DictConfig) -> None:
 
     # Model --------------------------------------------------------------
     model = DPOModel(cfg, lookback=inferred_lookback)
-    if cfg.model.get("reference_net"):
+    if cfg.model.get("reference_net") is not None:
+        # Load reference model from checkpoint
+        if not Path(cfg.model.reference_net).exists():
+            raise FileNotFoundError(
+                f"Reference model checkpoint not found: {cfg.model.reference_net}"
+            )
         # Reference model for KL regularization
         ref_model = DPOModel(cfg, lookback=inferred_lookback)
         ref_model.load_state_dict(
