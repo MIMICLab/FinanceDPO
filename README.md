@@ -59,11 +59,11 @@ python src/eval.py --checkpoint latest.ckpt \
 
 # 5‑b. Quick daily long/short strategy
 python src/backtest.py --checkpoint latest.ckpt \
-                       --prices-dir data/raw
+                       --prices_dir data/raw
 
 # 5‑c. Advanced back‑test (position sizing, stop‑loss, leverage, cost)
 python src/advanced_backtest.py --checkpoint latest.ckpt \
-                                --prices-dir data/raw \
+                                --prices_dir data/raw \
                                 --lookback 31 --hold 5 \
                                 --score-thresh 0.5 \
                                 --max-long 0.3 --max-short 0.1 \
