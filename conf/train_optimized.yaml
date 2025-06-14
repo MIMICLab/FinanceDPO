@@ -1,0 +1,55 @@
+# Optimized training configuration
+
+defaults:
+  - _self_
+
+# Data configuration
+data:
+  pairs_file: "${oc.env:HOME}/Desktop/FinanceDPO/data/sp500_pairs.parquet"
+  prices_dir: "${oc.env:HOME}/Desktop/FinanceDPO/data/sp500_prices"
+  lookback: 256
+  cache_file: "${oc.env:HOME}/Desktop/FinanceDPO/data/cached_features.pt"
+  num_workers: 8
+  val_fraction: 0.1
+  prefetch_factor: 2
+  use_optimized: true
+
+# Model configuration
+model:
+  d_model: 768
+  n_heads: 12
+  n_layers: 12
+  ff_dim: 3072
+  dropout: 0.1
+  use_optimized: true
+  use_flash: true
+  use_checkpoint: true  # Enable gradient checkpointing for memory efficiency
+
+# Training configuration
+train:
+  epochs: 100
+  batch_size: 128
+  lr: 1e-4
+  weight_decay: 0.01
+  gradient_clip: 1.0
+  accumulate_grad_batches: 2  # Effective batch size = 256
+  kl_coeff: 0.1
+  reference_checkpoint: null
+  early_stopping: true
+  patience: 10
+  precision: "16-mixed"
+  auto_scale_batch_size: false
+  auto_lr: false
+  use_scheduler: true
+
+# Output configuration
+output_dir: "outputs/optimized_${now:%Y-%m-%d_%H-%M-%S}"
+
+# Performance optimizations
+compile_model: true  # Use torch.compile() if available
+compile_mode: "default"  # Options: default, reduce-overhead, max-autotune
+profiler: null  # Set to "simple" or "advanced" for profiling
+
+# Hardware utilization
+benchmark: true  # Enable CUDNN benchmark
+deterministic: false  # Allow non-deterministic ops for speed
