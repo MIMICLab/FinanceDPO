@@ -1,0 +1,51 @@
+# Enhanced DPO configuration with advanced features
+
+# Data settings
+symbols: ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'META', 'NVDA', 'TSLA']
+lookback: 256
+forward_days: 8
+preference_quantiles: [0.2, 0.8]
+use_adaptive_thresholds: true
+augment_data: true
+
+# Feature extraction
+use_volume: true
+use_technical: true
+use_microstructure: true
+use_adaptive_window: false
+min_lookback: 20
+max_lookback: 252
+
+# Model architecture
+model:
+  d_model: 512
+  n_heads: 8
+  n_layers: 6
+  d_ff: 2048
+  dropout: 0.1
+  hidden_dim: 256  # For lightweight model
+
+# Training settings
+batch_size: 128
+epochs: 100
+lr: 0.0003
+optimizer: adamw
+scheduler: cosine
+weight_decay: 0.01
+val_split: 0.1
+num_workers: 4
+use_amp: true
+patience: 20
+
+# DPO settings
+beta: 0.1
+risk_penalty: 0.01
+margin: 0.0
+use_risk_head: true
+
+# Curriculum learning
+curriculum_thresholds: [0.5, 0.7, 0.9]
+
+# Logging
+log_interval: 10
+save_interval: 10
